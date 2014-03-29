@@ -1,8 +1,3 @@
-function Play()
-{
-  setInterval(Press, 1000);
-}
-
 function AiPlayer(gameManager) {
   this.events = {};
   var self = this;
@@ -12,8 +7,9 @@ function AiPlayer(gameManager) {
     {
       gameManager.restart();
     }
-
-    tryMove(gameManager);
+    if(!gameManager.won){
+      tryMove(gameManager);
+    }
   };
 
   setInterval(press, 100);
@@ -25,9 +21,9 @@ function ColumnFull(col, grid){
     if(!grid.cellOccupied({x:col, y:i})){
       return false;
     }
-
-    return true;
   }
+
+  return true;
 }
 
 function RowFull(row, grid){
@@ -112,7 +108,7 @@ function EmptyCellsInDirection(cell, direction, gameManager){
   var cells = 0;
   switch(direction){
   case 0:
-    for(var i = cell.y-1; i > 0; i--){
+    for(var i = cell.y-1; i >= 0; i--){
       if(!gameManager.grid.cellOccupied({x: cell.x, y: i})){
         cells++;
       }
@@ -133,7 +129,7 @@ function EmptyCellsInDirection(cell, direction, gameManager){
     }
     break;
   case 3:
-    for(var i = cell.x-1; i >0; i--){
+    for(var i = cell.x-1; i >= 0; i--){
       if(!gameManager.grid.cellOccupied({x: i, y: cell.y})){
         cells++;
       }
@@ -145,22 +141,85 @@ function EmptyCellsInDirection(cell, direction, gameManager){
 
 function HasDownRightMerge(cell, gameManager)
 {
-  if(cell.x == 3 || cell.y == 3){
-    return false;
-  }
-
-  if(!ColumnFull(cell.x+1, gameManager.grid)){
+  if(!gameManager.grid.cellOccupied(cell)){
     return false;
   }
 
   tileUpperLeft = gameManager.grid.cellContent(cell);
-  tileLowerRight = gameManager.grid.cellContent({x:cell.x+1, y:cell.y+1});
+
+  for(var i = cell.y-1; i >=0; i--){
+    var cellAbove = {x:cell.x, y:i};
+    if(gameManager.grid.cellOccupied(cellAbove)){
+      if(gameManager.grid.cellContent(cellAbove).value == tileUpperLeft.value){
+        return false;
+      }
+    }
+  }
+
+  if(MergesInDirection(cell, 2, gameManager)){
+    return false;
+  }
+  var moveDist = MoveDistance(cell, 2, gameManager);
+
+  if(moveDist == 0 || moveDist > 1){
+    return false;
+  }
+  tileLowerRight = gameManager.grid.cellContent({x:cell.x+1, y:cell.y+moveDist});
   if(tileUpperLeft != null && tileLowerRight != null)
   {
     if(tileUpperLeft.value == tileLowerRight.value){
-      var moveDist = MoveDistance(cell, 2, gameManager);
-      var theirMoveDist = MoveDistance({x:cell.x+1, y:cell.y+1}, 2, gameManager);
-      if(moveDist == 1 && theirMoveDist == 0){
+      var theirMoveDist = MoveDistance({x:cell.x+1, y:cell.y+moveDist}, 2, gameManager);
+      for(var i = cell.y+moveDist-1; i >= 0; i--){
+        if(MergesInDirection({x:cell.x+1, y:i}, 2, gameManager)){
+          return false;
+        }
+      }
+      if(theirMoveDist == 0){
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+function HasUpRightMerge(cell, gameManager){
+  if(!gameManager.grid.cellOccupied(cell)){
+    return false;
+  }
+
+  if(MergesInDirection(cell, 0, gameManager)){
+    return false;
+  }
+
+  me = gameManager.grid.cellContent(cell);
+
+  for(var i = cell.y+1; i < gameManager.grid.size; i++){
+    var cellBelow = {x:cell.x, y:i};
+    if(gameManager.grid.cellOccupied(cellBelow)){
+      if(gameManager.grid.cellContent(cellBelow).value == me.value){
+        return false;
+      }
+    }
+  }
+
+  var moveDist = MoveDistance(cell, 0, gameManager);
+
+  if(moveDist == 0){
+    return false;
+  }
+
+  upperRight = gameManager.grid.cellContent({x:cell.x+1, y:cell.y-moveDist});
+  if(me != null && upperRight != null)
+  {
+    if(me.value == upperRight.value){
+      var theirMoveDist = MoveDistance({x:cell.x+1, y:cell.y-moveDist}, 0, gameManager);
+      for(var i = cell.y-moveDist+1; i < gameManager.grid.size; i++){
+        if(MergesInDirection({x:cell.x+1, y:i}, 0, gameManager)){
+          return false;
+        }
+      }
+      if(theirMoveDist == 0){
         return true;
       }
     }
@@ -171,18 +230,67 @@ function HasDownRightMerge(cell, gameManager)
 
 function CheckDownRightCombo(gameManager){
   for(var i = 3; i != 0; i--){
-    if(ColumnFull(i, gameManager.grid) && HasDownRightMerge({x:i-1, y:0}, gameManager)){
-      return true;
+    if(ColumnFull(i, gameManager.grid)){
+      for(var j = 0; j < gameManager.grid.size-1; j++){
+        if(HasDownRightMerge({x:i-1, y:j}, gameManager)){
+          if(gameManager.grid.cellContent({x:i-1, y:j}).value > 16)
+          return true;
+        }
+      }
+    }
+    else
+    {
+      return false;
     }
   }
 
   return false;
 }
 
+function CheckUpRightCombo(gameManager){
+   for(var i = 3; i != 0; i--){
+     if(ColumnFull(i, gameManager.grid)){
+       for(var j = 0; j < gameManager.grid.size-1; j++){
+         if(HasUpRightMerge({x:i-1, y:j}, gameManager)){
+           return true;
+         }
+       }
+     }
+     else
+     {
+       return false;
+     }
+   }
+
+   return false;
+}
+var downRightCombo = false;
+var upRightCombo = false;
+var moveUp = false;
 function tryMove(gameManager)
 {
   var previousState = new Grid(gameManager.grid.size, gameManager.grid.serialize().cells);
 
+  if(!downRightCombo && !gameManager.grid.cellOccupied({x:3, y:0})){
+    moveUp = false;
+    gameManager.move(0);
+    if(!gameManager.grid.equals(previousState)){
+      return;
+    }
+  }
+
+  if(downRightCombo || upRightCombo)
+  {
+    gameManager.move(1);
+    if(!gameManager.grid.equals(previousState)){
+      downRightCombo = false;
+      upRightCombo = false;
+      return;
+    }
+  }
+
+  downRightCombo = false;
+  upRightCombo = false;
   // if(!gameManager.grid.cellOccupied({x:3, y:0})){
   //   gameManager.move(0);
   //   if(!gameManager.grid.equals(previousState)){
@@ -203,24 +311,36 @@ function tryMove(gameManager)
     }
   }
 
+  // if(CheckUpRightCombo(gameManager)){
+  //   gameManager.move(0);
+  //   if(!gameManager.grid.equals(previousState)){
+  //     upRightCombo = true;
+  //     return;
+  //   }
+  // }
+
   if(CheckDownRightCombo(gameManager)){
     gameManager.move(2);
     if(!gameManager.grid.equals(previousState)){
-      if(!gameManager.grid.cellOccupied({x:0, y:0})
-          && !gameManager.grid.cellOccupied({x:1, y:0})
-          && !gameManager.grid.cellOccupied({x:2, y:0}))
-          {
-            gameManager.move(1);
-          }
+      downRightCombo = true;
       return;
     }
   }
 
   var maxMove = FindHighestScoreMove(gameManager);
 
-  if(maxMove >= 0){
+  if(maxMove >= 0 && maxMove < 2){
     gameManager.move(maxMove);
-    return;
+    if(!gameManager.grid.equals(previousState)){
+      return;
+    }
+  }
+
+  if(maxMove == 2 && ColumnFull(3, gameManager.grid)){
+    gameManager.move(maxMove);
+    if(!gameManager.grid.equals(previousState)){
+      return;
+    }
   }
 
   gameManager.move(0);
@@ -264,7 +384,7 @@ function FindScoreForDirection(direction, gameManager){
           var merged = new Tile(positions.next, tile.value * 2);
 
           // Update the score
-          score += merged.value;
+          score += merged.value + 8;
 
         }
       }
