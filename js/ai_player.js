@@ -8,15 +8,97 @@ function AiPlayer(gameManager) {
   var self = this;
   var press = function()
   {
+    if(gameManager.over && !gameManager.won)
+    {
+      gameManager.restart();
+    }
+
     tryMove(gameManager);
   };
 
   setInterval(press, 100);
 }
 
+function ColumnFull(col, grid){
+  for(var i = 0; i < grid.cells.length; i++)
+  {
+    if(!grid.cellOccupied({x:col, y:i})){
+      return false;
+    }
+
+    return true;
+  }
+}
+
+function RowFull(row, grid){
+  for(var i = 0; i < grid.cells.length; i++)
+  {
+    if(!grid.cellOccupied({x:i, y:row})){
+      return false;
+    }
+
+    return true;
+  }
+}
+
+function RowContainsTile(row, grid){
+  for(var i = 0; i < grid.cells.length; i++)
+  {
+    if(grid.cellOccupied({x:i, y:row})){
+      return true;
+    }
+
+    return false;
+  }
+}
+
 function tryMove(gameManager)
 {
   var previousState = new Grid(gameManager.grid.size, gameManager.grid.serialize().cells);
+
+  // if(!gameManager.grid.cellOccupied({x:3, y:0})){
+  //   gameManager.move(0);
+  //   if(!gameManager.grid.equals(previousState)){
+  //     return;
+  //   }
+  // }
+  //
+  //if there is no tile in the lower right corner, and there are tiles
+  //in the bottom row, favor moving right
+  if(!gameManager.grid.cellOccupied({x:3, y:3})){
+    for(var i = 0; i < 3; i++){
+      if(gameManager.grid.cellOccupied({x:i, y:3})){
+        gameManager.move(1);
+        if(!gameManager.grid.equals(previousState)){
+          return;
+        }
+      }
+    }
+  }
+  if(!gameManager.grid.cellOccupied({x:2, y:3})
+          && gameManager.grid.cellOccupied({x:2, y:2})
+          && gameManager.grid.cellOccupied({x:2, y:1})
+          && gameManager.grid.cellOccupied({x:2, y:0})
+          && ColumnFull(3, gameManager.grid)){
+
+    tileUpperLeft = gameManager.grid.cellContent({x:2, y:0});
+    tileLowerRight = gameManager.grid.cellContent({x:3, y:1});
+    if(tileUpperLeft != null && tileLowerRight != null)
+    {
+      if(tileUpperLeft.value == tileLowerRight.value){
+        gameManager.move(2);
+        if(!gameManager.grid.equals(previousState)){
+          if(!gameManager.grid.cellOccupied({x:0, y:0})
+              && !gameManager.grid.cellOccupied({x:1, y:0})
+              && !gameManager.grid.cellOccupied({x:2, y:0}))
+              {
+                gameManager.move(1);
+              }
+          return;
+        }
+      }
+    }
+  }
 
   var maxMove = FindHighestScoreMove(gameManager);
 
@@ -80,11 +162,13 @@ function FindHighestScoreMove(gameManager) {
   // 0: up, 1: right, 2: down, 3: left
   var maxScoreDirection = -1;
   var maxScore = 0;
+
+  var order = [1, 0, 2, 3];
   for(var i = 0; i< 4; i++){
-    var score = FindScoreForDirection(i, gameManager);
+    var score = FindScoreForDirection(order[i], gameManager);
 
     if(score > maxScore){
-      maxScoreDirection = i;
+      maxScoreDirection = order[i];
       maxScore = score;
     }
   }
