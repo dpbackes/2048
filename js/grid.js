@@ -99,6 +99,38 @@ Grid.prototype.withinBounds = function (position) {
          position.y >= 0 && position.y < this.size;
 };
 
+Grid.prototype.equals = function(other)
+{
+  if(other.size != this.size){
+    return false;
+  }
+
+  for(var i = 0; i < this.cells.length; i++){
+    for(var j = 0; j< this.cells[i].length; j++){
+      if(this.cells[i][j] == null){
+        if(other.cells[i][j] != null){
+          return false;
+        }
+      }
+      else if(other.cells[i][j] == null)
+      {
+        return false;
+      }
+      else
+      {
+        if(this.cells[i][j].x != other.cells[i][j].x){
+          return false;
+        }
+        else if(this.cells[i][j].y != other.cells[i][j].y){
+          return false;
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
 Grid.prototype.serialize = function () {
   var cellState = [];
 
