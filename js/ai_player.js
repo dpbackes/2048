@@ -52,6 +52,133 @@ function RowContainsTile(row, grid){
   }
 }
 
+function ColumnHasDownwardMerge(col, gameManager)
+{
+  return FindScoreForDirection(0, gameManager) > 0;
+}
+
+function CanMoveDown(column, gameManager){
+  return !ColumnFull(column, gameManager.grid) || ColumnHasDownwardMerge(column, gameManager);
+}
+
+function MoveDistance(cell, direction, gameManager){
+  return EmptyCellsInDirection(cell, direction, gameManager) + MergesInDirection(cell, direction, gameManager);
+}
+
+function MergesInDirection(cell, direction, gameManager){
+  var cells = 0;
+  switch(direction){
+  case 0:
+    for(var i = 0; i < cell.y; i++){
+      var current = gameManager.grid.cellContent({x: cell.x, y:i});
+      var next = gameManager.grid.cellContent({x: cell.x, y:i+1});
+      if(current !== null && next !== null && current.value == next.value){
+        cells++
+      }
+    }
+    break;
+  case 1:
+    for(var i = gameManager.grid.size-1; i > cell.x; i--){
+      var current = gameManager.grid.cellContent({x: i, y:cell.y});
+      var next = gameManager.grid.cellContent({x: i-1, y:cell.y});
+      if(current !== null && next !== null && current.value == next.value){
+        cells++
+      }
+    }
+    break;
+  case 2:
+    for(var i = gameManager.grid.size-1; i > cell.y; i--){
+      var current = gameManager.grid.cellContent({x: cell.x, y:i});
+      var next = gameManager.grid.cellContent({x: cell.x, y:i-1});
+      if(current !== null && next !== null && current.value == next.value){
+        cells++
+      }
+    }
+    break;
+  case 3:
+    for(var i = 0; i < cell.x; i++){
+      var current = gameManager.grid.cellContent({x: i, y:cell.y});
+      var next = gameManager.grid.cellContent({x: i+1, y:cell.y});
+      if(current !== null && next !== null && current.value == next.value){
+        cells++
+      }
+    }
+    break;
+  }
+  return cells;
+}
+
+function EmptyCellsInDirection(cell, direction, gameManager){
+  var cells = 0;
+  switch(direction){
+  case 0:
+    for(var i = cell.y-1; i > 0; i--){
+      if(!gameManager.grid.cellOccupied({x: cell.x, y: i})){
+        cells++;
+      }
+    }
+    break;
+  case 1:
+    for(var i = cell.x+1; i < gameManager.grid.size; i++){
+      if(!gameManager.grid.cellOccupied({x: i, y: cell.y})){
+        cells++;
+      }
+    }
+    break;
+  case 2:
+    for(var i = cell.y+1; i < gameManager.grid.size; i++){
+      if(!gameManager.grid.cellOccupied({x: cell.x, y: i})){
+        cells++;
+      }
+    }
+    break;
+  case 3:
+    for(var i = cell.x-1; i >0; i--){
+      if(!gameManager.grid.cellOccupied({x: i, y: cell.y})){
+        cells++;
+      }
+    }
+    break;
+  }
+  return cells;
+}
+
+function HasDownRightMerge(cell, gameManager)
+{
+  if(cell.x == 3 || cell.y == 3){
+    return false;
+  }
+
+  if(!ColumnFull(cell.x+1, gameManager.grid)){
+    return false;
+  }
+
+  tileUpperLeft = gameManager.grid.cellContent(cell);
+  tileLowerRight = gameManager.grid.cellContent({x:cell.x+1, y:cell.y+1});
+  if(tileUpperLeft != null && tileLowerRight != null)
+  {
+    if(tileUpperLeft.value == tileLowerRight.value){
+      var moveDist = MoveDistance(cell, 2, gameManager);
+      var theirMoveDist = MoveDistance({x:cell.x+1, y:cell.y+1}, 2, gameManager);
+      if(moveDist == 1 && theirMoveDist == 0){
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+function CheckDownRightCombo(gameManager){
+  for(var i = 3; i != 0; i--){
+    if(ColumnFull(i, gameManager.grid) && HasDownRightMerge({x:i-1, y:0}, gameManager)){
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function tryMove(gameManager)
 {
   var previousState = new Grid(gameManager.grid.size, gameManager.grid.serialize().cells);
@@ -75,28 +202,17 @@ function tryMove(gameManager)
       }
     }
   }
-  if(!gameManager.grid.cellOccupied({x:2, y:3})
-          && gameManager.grid.cellOccupied({x:2, y:2})
-          && gameManager.grid.cellOccupied({x:2, y:1})
-          && gameManager.grid.cellOccupied({x:2, y:0})
-          && ColumnFull(3, gameManager.grid)){
 
-    tileUpperLeft = gameManager.grid.cellContent({x:2, y:0});
-    tileLowerRight = gameManager.grid.cellContent({x:3, y:1});
-    if(tileUpperLeft != null && tileLowerRight != null)
-    {
-      if(tileUpperLeft.value == tileLowerRight.value){
-        gameManager.move(2);
-        if(!gameManager.grid.equals(previousState)){
-          if(!gameManager.grid.cellOccupied({x:0, y:0})
-              && !gameManager.grid.cellOccupied({x:1, y:0})
-              && !gameManager.grid.cellOccupied({x:2, y:0}))
-              {
-                gameManager.move(1);
-              }
-          return;
-        }
-      }
+  if(CheckDownRightCombo(gameManager)){
+    gameManager.move(2);
+    if(!gameManager.grid.equals(previousState)){
+      if(!gameManager.grid.cellOccupied({x:0, y:0})
+          && !gameManager.grid.cellOccupied({x:1, y:0})
+          && !gameManager.grid.cellOccupied({x:2, y:0}))
+          {
+            gameManager.move(1);
+          }
+      return;
     }
   }
 
