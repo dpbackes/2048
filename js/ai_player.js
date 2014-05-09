@@ -10,18 +10,23 @@ function AiPlayer(gameManager, moveFinder) {
       self.gameManager.restart();
     }
     if(!gameManager.won){
-      if(!self.move(moveFinder.next()))
-      {
-        for(var i = 0; i < 4; i++){
-          if(self.move(i)){
-            return;
-          }
+    
+      var moves = moveFinder.next();
+      for(var i = 0; i < moves.length; i++){
+        if(self.move(moves[i])){
+          return;
         }
-      };
+      }
     }
   };
 
-  setInterval(run, 100);
+  //setInterval(run, 200);
+  $(document).click(function(e) { 
+    // Check for left button
+    if (e.button == 0) {
+        run(); 
+    }
+});
 }
 
 AiPlayer.prototype.emit = function (event, data) {
