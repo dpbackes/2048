@@ -10,7 +10,14 @@ function AiPlayer(gameManager, moveFinder) {
       self.gameManager.restart();
     }
     if(!gameManager.won){
-      self.move(moveFinder.next());
+      if(!self.move(moveFinder.next()))
+      {
+        for(var i = 0; i < 4; i++){
+          if(self.move(i)){
+            return;
+          }
+        }
+      };
     }
   };
 
