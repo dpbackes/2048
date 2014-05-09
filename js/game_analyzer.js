@@ -1,34 +1,60 @@
 function GameAnalyzer(gameManager){
-	this.gameManager = gameManager;
+  this.gameManager = gameManager;
 
-	this.gridAnalyzer = new GridAnalyzer(gameManager.grid);
+  this.gridAnalyzer = new GridAnalyzer(gameManager.grid);
 }
 
+GameAnalyzer.prototype.mostMerges = function() {
+};
+
 GameAnalyzer.prototype.smoothestDirection = function() {
-  var result = []
+  var self = this;
+  return this.minDirection(function(direction) {
+      var grid = self.gridAfterMoveInDirection(direction);
+      return grid.moved ? self.gridAnalyzer.CalculateSmoothness(grid) : Number.MAX_VALUE;
+    });
+};
+
+GameAnalyzer.prototype.maxDirection = function(callback)
+{
+  var result = this.eachDirection(callback);
   
-  var upGrid = this.gridAfterMoveInDirection(Ai2048.direction.up);
-  result[Ai2048.direction.up] = upGrid.moved ? this.gridAnalyzer.CalculateSmoothness(upGrid) : Number.MAX_VALUE;
-  
-  var rightGrid = this.gridAfterMoveInDirection(Ai2048.direction.right);
-  result[Ai2048.direction.right] = rightGrid.moved ? this.gridAnalyzer.CalculateSmoothness(rightGrid) : Number.MAX_VALUE;
-  
-  var downGrid = this.gridAfterMoveInDirection(Ai2048.direction.down)
-  result[Ai2048.direction.down] = downGrid.moved ? this.gridAnalyzer.CalculateSmoothness(downGrid) : Number.MAX_VALUE;
-  
-  var leftGrid = this.gridAfterMoveInDirection(Ai2048.direction.left);
-  result[Ai2048.direction.left] = leftGrid.moved ? this.gridAnalyzer.CalculateSmoothness(leftGrid) : Number.MAX_VALUE;
-  
-  var smoothestVal = result[0];
-  var smoothestIndex = 0;
+  var val = result[0];
+  var index = 0;
   for(var i = 0; i < result.length; i++){
-    if(result[i] < smoothestVal){
-      smoothestIndex = i;
+    if(result[i] > val){
+      val = result[i];
+      index = i;
     }
   }
-  
-  return smoothestIndex;
+
+  return index;
 };
+
+GameAnalyzer.prototype.minDirection = function(callback)
+{
+  var result = this.eachDirection(callback);
+  
+  var val = result[0];
+  var index = 0;
+  for(var i = 0; i < result.length; i++){
+    if(result[i] < val){
+      val = result[i];
+      index = i;
+    }
+  }
+
+  return index;
+};
+
+GameAnalyzer.prototype.eachDirection = function(callback){
+  var result = [];
+  for(var i = 0; i < Ai2048.direction.length; i++){
+    result[i] = callback(i);
+  }
+  
+  return result;
+}
 
 GameAnalyzer.prototype.gridAfterMoveInDirection = function(direction){
 

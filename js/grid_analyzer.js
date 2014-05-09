@@ -11,7 +11,7 @@ GridAnalyzer.prototype.CalculateSmoothness = function(grid){
       var otherCell = grid.cells[x][y];
       
       if(otherCell){
-        return Math.abs(otherCell.value - cell.value);
+        return Math.log(Math.abs(otherCell.value - cell.value))/Math.log(2);
       }
     }
 
