@@ -9,7 +9,7 @@ function AiPlayer(gameManager, moveFinder) {
     {
       self.gameManager.restart();
     }
-    if(!gameManager.won){
+    if(true || !gameManager.won){
     
       var moves = moveFinder.next();
       for(var i = 0; i < moves.length; i++){
