@@ -14,13 +14,17 @@ function AiPlayer(gameManager, moveFinder) {
       var moves = moveFinder.next();
       for(var i = 0; i < moves.length; i++){
         if(self.move(moves[i])){
+          if(i > 3)
+          {
+            console.log("bad move forced");
+          }
           return;
         }
       }
     }
   };
 
-  setInterval(run, 200);
+  setInterval(run, 100);
   $(document).click(function(e) { 
     // Check for left button
     if (e.button == 0) {

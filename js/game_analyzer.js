@@ -28,9 +28,7 @@ GameAnalyzer.prototype.bestGridScoreAtDepth = function(depth) {
   var self = this;
   return this.minDirection(function(direction) {
       var grid = self.gridAfterMoveInDirection(direction);
-      //console.log("grid %j", grid.cells);
       var score = self.gridScoreWithDepth(grid, depth-1);
-      console.log("dir "+direction+" score "+score);
       return score;
     });
 };

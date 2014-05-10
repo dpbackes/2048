@@ -53,30 +53,49 @@ GridAnalyzer.prototype.CalculateSmoothness = function(grid){
 GridAnalyzer.prototype.score = function()
 {
   var score = 0;
-
+  
   if(!this.grid.cellOccupied({x: 3, y: 0})){
     score += 100000;
   }
   
-  /* for(var i = 0; i < this.grid.size; i++)
-  {
-    if(!this.grid.cellOccupied({x:this.grid.size-1, y:i})){
-      score += 10000 * (this.grid.size - i);
-    }
-  } */
-  
   if(this.grid.cells[3][0] && this.grid.cells[3][1] && this.grid.cells[3][0].value < this.grid.cells[3][1].value)
   {
-    score += 100000000
+    score += 10000
   }
-  
-  //score += this.ColumnMergesFromLeft(3);
-  
-  //score += this.LeftCellLessThanCount(3);
   
   score += (Math.pow(this.grid.size, 2) - this.grid.availableCells().length);
   
+  score += this.DiagonalMatchCount();
+  
+  if(!this.ColumnFull(3))
+  {
+    score += 100;
+  }
+  
   return score;
+}
+
+GridAnalyzer.prototype.DiagonalMatchCount = function()
+{
+  var count = 0;
+  var self = this;
+  this.grid.eachCell(function(x, y, cell)
+  {
+    if(self.grid.cells[x+1])
+    {
+      if(cell && self.grid.cells[x+1][y-1] && self.grid.cells[x+1][y-1].value == cell.value)
+      {
+        count++;
+      }
+      
+      if(cell && self.grid.cells[x+1][y+1] && self.grid.cells[x+1][y+1].value == cell.value)
+      {
+        count++;
+      }
+    }
+  });
+  
+  return count;
 }
 
 GridAnalyzer.prototype.ColumnFull = function(columnIndex){

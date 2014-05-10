@@ -6,9 +6,8 @@ function MoveFinder(gameManager) {
 
 MoveFinder.prototype.next = function(){
   var self = this;
-  return this.noPriority(function() {
+  return this.prioritizeDirections(function() {
     var dir = self.gameAnalyzer.bestGridScoreAtDepth(2);
-    console.log("moving "+dir);
     return dir;
   });
 };
@@ -16,7 +15,7 @@ MoveFinder.prototype.next = function(){
 MoveFinder.prototype.noPriority = function(callback){
   var dir = callback();
   
-  var dirs = [Ai2048.direction.up, Ai2048.direction.right, Ai2048.direction.down, Ai2048.direction.left];
+  var dirs = [Ai2048.direction.right, Ai2048.direction.up, Ai2048.direction.down, Ai2048.direction.left];
   
   dirs.unshift(dir);
   
@@ -43,8 +42,8 @@ MoveFinder.prototype.prioritizeDirections = function(callback){
       return [Ai2048.direction.down, Ai2048.direction.up, Ai2048.direction.right, Ai2048.direction.left];
     }
 
-    return [Ai2048.direction.right, Ai2048.direction.up, Ai2048.direction.down, Ai2048.direction.left];
+    return [Ai2048.direction.up, Ai2048.direction.up, Ai2048.direction.down, Ai2048.direction.left];
   }
   
-  return [Ai2048.direction.right, Ai2048.direction.up, Ai2048.direction.down, Ai2048.direction.left];
+  return [Ai2048.direction.up, Ai2048.direction.up, Ai2048.direction.down, Ai2048.direction.left];
 };
