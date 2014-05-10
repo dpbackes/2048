@@ -7,7 +7,8 @@ function MoveFinder(gameManager) {
 MoveFinder.prototype.next = function(){
   var self = this;
   return this.noPriority(function() {
-    var dir = self.gameAnalyzer.smoothestDirectionWithDepth(1);
+    var dir = self.gameAnalyzer.bestGridScoreAtDepth(2);
+    console.log("moving "+dir);
     return dir;
   });
 };

@@ -20,7 +20,7 @@ function AiPlayer(gameManager, moveFinder) {
     }
   };
 
-  //setInterval(run, 200);
+  setInterval(run, 200);
   $(document).click(function(e) { 
     // Check for left button
     if (e.button == 0) {
@@ -29,7 +29,7 @@ function AiPlayer(gameManager, moveFinder) {
 });
 }
 
-AiPlayer.prototype.emit = function (event, data) {
+AiPlayer.prototype.emit = function (event, data) {sc
   var callbacks = this.events[event];
   if (callbacks) {
     callbacks.forEach(function (callback) {

@@ -24,6 +24,44 @@ GameAnalyzer.prototype.smoothestDirectionWithDepth = function(depth) {
     });
 };
 
+GameAnalyzer.prototype.bestGridScoreAtDepth = function(depth) {
+  var self = this;
+  return this.minDirection(function(direction) {
+      var grid = self.gridAfterMoveInDirection(direction);
+      //console.log("grid %j", grid.cells);
+      var score = self.gridScoreWithDepth(grid, depth-1);
+      console.log("dir "+direction+" score "+score);
+      return score;
+    });
+};
+
+GameAnalyzer.prototype.gridScoreWithDepth = function(grid, depthToSearch) {
+  var self = this;
+  
+  if(depthToSearch)
+  {
+    var newDepth = depthToSearch - 1;
+    var result = this.eachDirection(function(direction){
+      var newGrid = self.gridAfterMoveInDirection(direction, grid);
+      return new GridAnalyzer(grid).score() + self.gridScoreWithDepth(newGrid, newDepth);
+    });
+    
+    var score = result[0];
+    for(var i = 0; i < result.length; i++)
+    {
+      if(score > result[i])
+      {
+        score = result[i];
+      }
+    }
+    
+    return score;
+  }
+
+  return new GridAnalyzer(grid).score();
+};
+
+
 GameAnalyzer.prototype.smoothestDirectionWithDepthMinusMergeScore = function(depth) {
   var self = this;
   return this.minDirection(function(direction) {
@@ -289,11 +327,18 @@ GameAnalyzer.prototype.gridAfterMoveInDirection = function(direction, grid){
 
   var self = this;
 
+  var returnGrid;
+  
   if(!grid)
   {
-    grid = new Grid(this.gameManager.grid.size, this.gameManager.grid.serialize().cells);
+    returnGrid = new Grid(this.gameManager.grid.size, this.gameManager.grid.serialize().cells);
   }
-
+  else
+  {
+    returnGrid = new Grid(grid.size, grid.serialize().cells);
+  }
+  
+  
   var cell, tile;
 
   var vector     = this.gameManager.getVector(direction);
@@ -305,22 +350,22 @@ GameAnalyzer.prototype.gridAfterMoveInDirection = function(direction, grid){
   traversals.x.forEach(function (x) {
     traversals.y.forEach(function (y) {
       cell = { x: x, y: y };
-      tile = grid.cellContent(cell);
+      tile = returnGrid.cellContent(cell);
 
       if (tile) {
-        var positions = self.gameManager.findFarthestPosition(cell, vector);
-        var next      = grid.cellContent(positions.next);
+        var positions = self.gameManager.findFarthestPosition(cell, vector, returnGrid);
+        var next      = returnGrid.cellContent(positions.next);
 
         if (next && next.value === tile.value && !next.mergedFrom) {
           var merged = new Tile(positions.next, tile.value * 2);
           merged.mergedFrom = [tile, next];
 
-          grid.insertTile(merged);
-          grid.removeTile(tile);
+          returnGrid.insertTile(merged);
+          returnGrid.removeTile(tile);
 
           tile.updatePosition(positions.next);
         } else {
-          self.moveTile(grid, tile, positions.farthest);
+          self.moveTile(returnGrid, tile, positions.farthest);
         }
 
         if (!self.gameManager.positionsEqual(cell, tile)) {
@@ -330,9 +375,9 @@ GameAnalyzer.prototype.gridAfterMoveInDirection = function(direction, grid){
     });
   });
 
-  grid.moved = moved;
+  returnGrid.moved = moved;
 
-  return grid;
+  return returnGrid;
 };
 
 GameAnalyzer.prototype.moveTile = function (grid, tile, cell) {
