@@ -9,17 +9,10 @@ function AiPlayer(gameManager, moveFinder) {
     {
       self.gameManager.restart();
     }
-    if(true || !gameManager.won){
-    
-      var moves = moveFinder.next();
-      for(var i = 0; i < moves.length; i++){
-        if(self.move(moves[i])){
-          if(i > 3)
-          {
-            console.log("bad move forced");
-          }
-          return;
-        }
+    var moves = moveFinder.next();
+    for(var i = 0; i < moves.length; i++){
+      if(self.move(moves[i])){
+        return;
       }
     }
   };
