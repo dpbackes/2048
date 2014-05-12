@@ -10,11 +10,6 @@ GridAnalyzer.prototype.score = function()
     score += 100000;
   }
   
-  if(this.grid.cells[3][0] && this.grid.cells[3][1] && this.grid.cells[3][0].value < this.grid.cells[3][1].value)
-  {
-    score += 10000
-  }
-  
   score += (Math.pow(this.grid.size, 2) - this.grid.availableCells().length);
   
   score += this.DiagonalMatchCount();
