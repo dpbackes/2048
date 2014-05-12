@@ -6,8 +6,16 @@ GridAnalyzer.prototype.score = function()
 {
   var score = 0;
 
+  if(!this.UpperRightIsLargestInColumn()){
+    score += 100010;
+  }
+
   if(!this.grid.cellOccupied({x: 3, y: 0})){
     score += 100000;
+  }
+
+  if(!this.RightColumnInDescendingOrder()){
+    score += 1000;
   }
 
   score += (Math.pow(this.grid.size, 2) - this.grid.availableCells().length);
@@ -18,7 +26,14 @@ GridAnalyzer.prototype.score = function()
   {
     score += 100;
   }
-    
+  else
+  {
+    if(this.grid.cells[2][3] && this.grid.cells[2][3].value > this.grid.cells[3][3].value)
+    {
+      score += 10;
+    }
+  }
+
   return score;
 }
 
@@ -55,6 +70,34 @@ GridAnalyzer.prototype.ColumnFull = function(columnIndex){
   return true;
 };
 
+GridAnalyzer.prototype.RightColumnInDescendingOrder = function(){
+  var largestScore = 0;
+  for(var i = 1; i < this.grid.size-1; i++)
+  {
+    if(this.grid.cells[3][i] && this.grid.cells[3][i+1] && this.grid.cells[3][i+1].value > this.grid.cells[3][i].value){
+      return false;
+    }
+  }
+
+  return true;
+};
+
+GridAnalyzer.prototype.UpperRightIsLargestInColumn = function(){
+  var largestScore = 0;
+  for(var i = 1; i < this.grid.size; i++)
+  {
+    if(this.grid.cells[3][0] && this.grid.cells[3][i] && this.grid.cells[3][i].value > this.grid.cells[3][0].value){
+      return false;
+    }
+
+    if(!(this.grid.cells[3][0]) && this.grid.cells[3][i]){
+      return false;
+    }
+  }
+
+  return true;
+};
+
 GridAnalyzer.prototype.ColumnHasVerticalMerges = function(columnIndex){
 
   for(var i = 0; i < this.grid.size-1; i++)
@@ -73,6 +116,8 @@ GridAnalyzer.prototype.ColumnHasVerticalMerges = function(columnIndex){
 
   return false;
 };
+
+
 
 GridAnalyzer.prototype.LogBaseTwo = function(value)
 {
