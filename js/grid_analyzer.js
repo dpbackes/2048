@@ -5,20 +5,20 @@ function GridAnalyzer(grid){
 GridAnalyzer.prototype.score = function()
 {
   var score = 0;
-  
+
   if(!this.grid.cellOccupied({x: 3, y: 0})){
     score += 100000;
   }
-  
+
   score += (Math.pow(this.grid.size, 2) - this.grid.availableCells().length);
-  
+
   score += this.DiagonalMatchCount();
-  
+
   if(!this.ColumnFull(3))
   {
     score += 100;
   }
-  
+    
   return score;
 }
 
@@ -34,14 +34,14 @@ GridAnalyzer.prototype.DiagonalMatchCount = function()
       {
         count++;
       }
-      
+
       if(cell && self.grid.cells[x+1][y+1] && self.grid.cells[x+1][y+1].value == cell.value)
       {
         count++;
       }
     }
   });
-  
+
   return count;
 }
 
@@ -51,12 +51,12 @@ GridAnalyzer.prototype.ColumnFull = function(columnIndex){
       return false;
     }
   }
-  
+
   return true;
 };
 
 GridAnalyzer.prototype.ColumnHasVerticalMerges = function(columnIndex){
-  
+
   for(var i = 0; i < this.grid.size-1; i++)
   {
     if(this.grid.cells[columnIndex])

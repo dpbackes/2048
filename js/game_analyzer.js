@@ -14,7 +14,7 @@ GameAnalyzer.prototype.bestGridScoreAtDepth = function(depth) {
 
 GameAnalyzer.prototype.gridScoreWithDepth = function(grid, depthToSearch) {
   var self = this;
-  
+
   if(depthToSearch)
   {
     var newDepth = depthToSearch - 1;
@@ -22,7 +22,7 @@ GameAnalyzer.prototype.gridScoreWithDepth = function(grid, depthToSearch) {
       var newGrid = self.gridAfterMoveInDirection(direction, grid);
       return new GridAnalyzer(grid).score() + self.gridScoreWithDepth(newGrid, newDepth);
     });
-    
+
     var score = result[0];
     for(var i = 0; i < result.length; i++)
     {
@@ -31,7 +31,7 @@ GameAnalyzer.prototype.gridScoreWithDepth = function(grid, depthToSearch) {
         score = result[i];
       }
     }
-    
+
     return score;
   }
 
@@ -41,7 +41,7 @@ GameAnalyzer.prototype.gridScoreWithDepth = function(grid, depthToSearch) {
 GameAnalyzer.prototype.maxDirection = function(callback)
 {
   var result = this.eachDirection(callback);
-  
+
   var val = result[0];
   var index = 0;
   for(var i = 0; i < result.length; i++){
@@ -57,13 +57,20 @@ GameAnalyzer.prototype.maxDirection = function(callback)
 GameAnalyzer.prototype.minDirection = function(callback)
 {
   var result = this.eachDirection(callback);
-  
+
   var val = result[0];
+  var priority = [Ai2048.direction.up, Ai2048.direction.right, Ai2048.direction.down];
+  var gridA = new GridAnalyzer(this.gameManager.grid);
+
+  if(gridA.ColumnFull(3) && !gridA.ColumnHasVerticalMerges(3)){
+    priority = [Ai2048.direction.down, Ai2048.direction.right, Ai2048.direction.up];
+  }
+
   var index = 0;
   for(var i = 0; i < result.length; i++){
-    if(result[i] < val){
-      val = result[i];
-      index = i;
+    if(result[priority[i]] < val){
+      val = result[priority[i]];
+      index = priority[i];
     }
   }
 
@@ -75,7 +82,7 @@ GameAnalyzer.prototype.eachDirection = function(callback){
   for(var i = 0; i < Ai2048.direction.length; i++){
     result[i] = callback(i);
   }
-  
+
   return result;
 };
 
@@ -84,7 +91,7 @@ GameAnalyzer.prototype.gridAfterMoveInDirection = function(direction, grid){
   var self = this;
 
   var returnGrid;
-  
+
   if(!grid)
   {
     returnGrid = new Grid(this.gameManager.grid.size, this.gameManager.grid.serialize().cells);
@@ -93,8 +100,8 @@ GameAnalyzer.prototype.gridAfterMoveInDirection = function(direction, grid){
   {
     returnGrid = new Grid(grid.size, grid.serialize().cells);
   }
-  
-  
+
+
   var cell, tile;
 
   var vector     = this.gameManager.getVector(direction);
